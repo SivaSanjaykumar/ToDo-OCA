@@ -5,14 +5,24 @@ import TodoItem from "./components/TodoItem";
 const App = () => {
   const [value, setValue] = useState("");
   const [todos, setTodos] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const fetchTodos = async () => {
     try {
+      setLoading(true);
+      setError(null);
+
       const res = await fetch("http://localhost:5000/todos");
+      if (!res.ok) {
+        throw new error("failed to fetch todos");
+      }
       const data = await res.json();
       setTodos(data);
     } catch (error) {
       console.error("Error fetching todos:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -67,7 +77,8 @@ const App = () => {
             />
             <button
               onClick={addTodo}
-              className="w-15 h-10  bg-blue-300 outline-none font-extrabold text-3xl text-white cursor-pointer"
+              disabled={loading}
+              className="w-15 h-10  bg-blue-300 outline-none font-extrabold text-3xl text-white cursor-pointer disabled:cursor-not-allowed"
             >
               +
             </button>
@@ -76,7 +87,18 @@ const App = () => {
           <h3 className="w-full flex items-center justify-center capitalize italic text-blue-500 text-2xl font-extrabold">
             Tasks
           </h3>
+          {loading && (
+            <div className="flex justify-center my-4">
+              <div className="w-8 h-8 border-4 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          )}
+
           <ul>
+            {!loading && todos.length === 0 && (
+              <p className="text-center text-gray-500 my-4">
+                No tasks yet. Add your first task 🚀
+              </p>
+            )}
             {todos.map((todo) => (
               <TodoItem
                 key={todo._id}
